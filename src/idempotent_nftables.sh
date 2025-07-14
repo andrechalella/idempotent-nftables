@@ -101,16 +101,17 @@ if [ "$1" != test ] && [ -n "${SUFFIX-}" ] && [ -d "$tmpdir" ]; then
     done
 fi
 
-tmp=$(mktemp --suffix="$SUFFIX")
-
 if [ "$1" = start ] || [ "$1" = reload ]; then
     start_or_reload=1
 else
     start_or_reload=
 fi
+tmp=$(mktemp --suffix="$SUFFIX")
+ret=
 
 # Loop through each .nft in dir
-find "$dir" -type f -name '*.nft' | while IFS= read -r file; do
+nfts=$(find "$dir" -type f -name '*.nft')
+while IFS= read -r file; do
     for table in $(get_tables "$file"); do
         # Split family|table
         IFS=\| read -r family table <<EOF
@@ -126,10 +127,20 @@ EOF
         unset family table
     done
 
-    [ -z $start_or_reload ] || $NFT -f "$file"
+    if [ -n "$start_or_reload" ]; then
+        if ! $NFT -f "$file"; then
+            # we must remember if there was a failure to exit accordingly
+            ret=1
+        fi
+    fi
 
     unset file
-done
+done <<EOF
+$nfts
+EOF
 
 # Clean the temp file if empty
 [ -s "$tmp" ] || rm -- "$tmp"
+
+# Exit with error code if nft -f had errors
+[ -z "$ret" ] || exit 1
