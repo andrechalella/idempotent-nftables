@@ -23,10 +23,10 @@ table ip restrict_docker0 {
 }
 ```
 
-2. Now run `systemctl start idempotent-nftables` (or `reload`, it's the same)
+2. Now run `systemctl start idempotent-nftables` (or `reload`, if it was already running)
 3. Find that it was loaded with `nft list ruleset`
-4. Modify that file, delete it or don't do anything at all
-5. Run systemctl again (`reload` would be more semantic this time, but again it's the same)
+4. Modify that file, delete it or (to test idempotency) don't do anything at all
+5. Run `systemctl reload idempotent-nftables`
 6. Check the ruleset again and find that there are no old or duplicated rules there
 
 ### Caveat
@@ -47,7 +47,8 @@ mkdir /etc/idempotent_nftables
 mv idempotent_nftables.sh /etc/idempotent_nftables
 chmod a+x /etc/idempotent_nftables/idempotent_nftables.sh
 mv idempotent-nftables.service /etc/systemd/system
+systemctl start idempotent-nftables
 systemctl enable idempotent-nftables
 ```
 
-The `systemctl enable` line makes the service run automatically at boot, thus applying your custom rules.
+The last line (`systemctl enable`) makes the service run automatically at boot, thus applying your custom rules.
