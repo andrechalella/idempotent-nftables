@@ -1,0 +1,8 @@
+#!/usr/sbin/nft -f
+
+table ip restrict_docker0 {
+	chain filter_forward {
+		type filter hook forward priority -10; policy accept;
+		iifname docker0 ct state new drop
+	}
+}

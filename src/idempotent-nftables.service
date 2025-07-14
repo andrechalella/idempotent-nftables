@@ -1,0 +1,25 @@
+[Unit]
+Description=Apply nftables rules idempotently
+# If nftables.service is enabled, ours should run afterwards,
+# because it has the bad habit of flushing the ruleset
+After=nftables.service
+# Same as /usr/lib/systemd/system/nftables.service
+Wants=network-pre.target
+Before=network-pre.target shutdown.target
+Conflicts=shutdown.target
+DefaultDependencies=no
+
+[Service]
+ExecStart=/etc/idempotent_nftables/idempotent_nftables.sh start
+ExecReload=/etc/idempotent_nftables/idempotent_nftables.sh reload
+ExecStop=/etc/idempotent_nftables/idempotent_nftables.sh stop
+# Same as /usr/lib/systemd/system/nftables.service
+Type=oneshot
+RemainAfterExit=yes
+StandardInput=null
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+# Run automatically on boot
+WantedBy=multi-user.target
